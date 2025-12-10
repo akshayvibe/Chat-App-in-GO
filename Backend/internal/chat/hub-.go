@@ -1,5 +1,7 @@
 package chat
 
+import "log"
+
 // import "golang.org/x/text/message"
 
 type Hub struct {
@@ -28,6 +30,7 @@ func (h *Hub) Run() {
 				delete(h.Clients, client)
 				close(client.Send)
 			}
+			log.Println("connecting to",client.Conn.RemoteAddr())
 		case message:=<-h.Broadcast:
 			for client:=range h.Clients{
 				select{
