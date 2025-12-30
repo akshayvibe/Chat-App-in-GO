@@ -8,6 +8,7 @@ import (
 	"github.com/akshayjha21/Chat-App-in-GO/internal/types"
 	"gorm.io/driver/sqlite" // Sqlite driver based on GGO
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	// "golang.org/x/tools/go/analysis/passes/defers"
 )
 
@@ -24,6 +25,7 @@ func New(cfg *config.Config) (*Sqlite, error) {
 		&types.User{},
 		&types.Room{},
 		&types.RoomMember{},
+		&types.Message{},
 	)
 	if err != nil {
 		return nil, err
@@ -31,13 +33,18 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	return &Sqlite{Db: db}, nil
 }
 func (s *Sqlite) CreateConnection(user *types.User, room *types.Room) (*types.RoomMember, error) {
-
+	
 	newMember := types.RoomMember{
 		RoomId: room.Id,
 		UserId: user.Id,
 		Role:   "member",
 	}
-	result := s.Db.Create(&newMember)
+	//Use "Clauses" to ignore duplicates.
+    // If the user is already a member, we just do nothing and return success.
+    // This allows users to refresh the page without errors.
+    result := s.Db.Clauses(clause.OnConflict{
+        DoNothing: true, // If RoomId + UserId exists, don't throw error
+    }).Create(&newMember)
 	if result.Error != nil {
 		// Specifically check for unique constraint error (user already in room)
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {

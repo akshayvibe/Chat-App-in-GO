@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Go Chat Room</title>
     <style>
-        /* Your existing CSS (omitted for brevity) */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
         body {
@@ -73,87 +72,57 @@
             line-height: 1.4;
             animation: fadeIn 0.2s ease;
         }
-        /* Style for YOU'RE OWN SENT message */
-        .message-bubble.sent {
+
+        /* Input Area */
+        .input-area {
+            padding: 15px;
+            background-color: #2c2c2e;
+            border-top: 1px solid #3a3a3c;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background-color: #1a1a1d;
+            color: white;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
             background-color: #4ecca3;
             color: #1a1a1d;
-            align-self: flex-end; /* Align to the right */
-        }
-
-        .message-bubble .sender {
-            font-size: 11px;
             font-weight: bold;
-            color: #a0a0a0;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .message-bubble.sent .sender {
-            color: #1a1a1d;
-        }
-        /* End of existing CSS */
-
-
-        /* Modal Styles for Join Form */
-        .modal {
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
         }
 
-        .modal-content {
-            background-color: #2c2c2e;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 350px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            color: #eeeeee;
-        }
+        button:active { transform: scale(0.95); }
 
-        .modal-content h2 {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #4ecca3;
-        }
+        /* Scrollbar Styling */
+        #messages::-webkit-scrollbar { width: 6px; }
+        #messages::-webkit-scrollbar-thumb { background-color: #4ecca3; border-radius: 3px; }
 
-        .modal-content input {
-            width: 100%;
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            background-color: #1a1a1d;
-            border: 1px solid #3a3a3c;
-            color: white;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="joinModal" class="modal">
-    <div class="modal-content">
-        <h2>Join Chat Room</h2>
-        <input type="text" id="usernameInput" placeholder="Enter Your Username" required>
-        <input type="text" id="roomnameInput" placeholder="Enter Room Name (e.g., General)" required>
-        <button id="joinButton" style="width: 100%; padding: 12px;">Join Chat</button>
-    </div>
-</div>
-
-<div class="chat-container" style="display: none;">
+<div class="chat-container">
     <div class="chat-header" id="headerStatus">
-        <span id="roomTitle">Go Chat Room</span>
+        <span>Go Chat Room</span>
         <span class="status-dot"></span>
     </div>
 
     <div id="messages">
-        </div>
+        <div class="message-bubble" style="background-color: #4ecca3; color: black;">Welcome to the Chat!</div>
+    </div>
 
     <div class="input-area">
         <input type="text" id="messageInput" placeholder="Type a message...">
@@ -163,84 +132,35 @@
 
 <script>
     let ws;
-    let username = "";
-    let roomname = "";
-    
     const messagesDiv = document.getElementById("messages");
     const statusHeader = document.getElementById("headerStatus");
-    const roomTitle = document.getElementById("roomTitle");
     const inputField = document.getElementById("messageInput");
-    const joinModal = document.getElementById("joinModal");
-    const chatContainer = document.querySelector(".chat-container");
-    const usernameInput = document.getElementById("usernameInput");
-    const roomnameInput = document.getElementById("roomnameInput");
-    const joinButton = document.getElementById("joinButton");
 
-
-    // --- Core Message Rendering Function ---
-    function appendMessage(data, isSent) {
-        const bubble = document.createElement("div");
-        bubble.className = "message-bubble";
-        if (isSent) {
-            bubble.classList.add("sent");
-        }
-        
-        // Assuming the server sends a JSON payload: { "sender": "user", "content": "hello" }
-        try {
-            const msgObj = JSON.parse(data);
-            
-            const senderSpan = document.createElement("span");
-            senderSpan.className = "sender";
-            senderSpan.innerText = msgObj.sender; // Display the sender name
-            
-            bubble.appendChild(senderSpan);
-            bubble.appendChild(document.createTextNode(msgObj.content.trim())); // Message content
-            
-        } catch(e) {
-            // Fallback for simple text messages (like server notices)
-            bubble.innerText = data.trim();
-            bubble.style.backgroundColor = isSent ? '#4ecca3' : '#3a3a3c'; // Revert background for general messages
-            bubble.style.color = isSent ? '#1a1a1d' : '#eeeeee';
-        }
-        
-        messagesDiv.appendChild(bubble);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-
-    // --- Connection Logic ---
     function connect() {
-        const port = "8069"; // Ensure this matches your Go server port
-        ws = new WebSocket(`ws://localhost:${port}/ws?user=${encodeURIComponent(username)}&room=${encodeURIComponent(roomname)}`);
+        // NOTE: Ensure your port matches your Go server (e.g., 8080 or 8069)
+        ws = new WebSocket("ws://localhost:8069/ws");
 
         ws.onopen = function() {
-            console.log(`Connected to room: ${roomname} as user: ${username}`);
+            console.log("Connected");
             statusHeader.classList.add("connected");
-            roomTitle.innerText = `#${roomname}`;
-            
-            // Send the initial JOIN message (optional, as we pass details in the URL)
-            // If the Go backend needs an explicit JSON message:
-            /*
-            ws.send(JSON.stringify({
-                type: "join",
-                username: username,
-                room: roomname
-            }));
-            */
-            
-            appendMessage(`System: You have joined the room #${roomname}.`, false);
         };
 
         ws.onmessage = function(event) {
-            // Received messages are not sent by us
-            appendMessage(event.data, false);
+            // Create a bubble for received message
+            const bubble = document.createElement("div");
+            bubble.className = "message-bubble";
+            // Cleaning up the message (removing newlines if any)
+            bubble.innerText = event.data.trim(); 
+            messagesDiv.appendChild(bubble);
+            
+            // Auto-scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         };
 
         ws.onclose = function() {
             console.log("Disconnected, retrying...");
             statusHeader.classList.remove("connected");
-            appendMessage("System: Connection lost. Retrying...", false);
-            setTimeout(connect, 3000); // Retry connection after 3 seconds
+            setTimeout(connect, 1000);
         };
 
         ws.onerror = function(error) {
@@ -250,64 +170,20 @@
 
     function sendMessage() {
         const message = inputField.value;
-        if (message.trim() !== "" && ws && ws.readyState === WebSocket.OPEN) {
-            
-            // 1. Prepare message payload for the server
-            const payload = JSON.stringify({
-                sender: username,
-                content: message,
-            });
-            
-            // 2. Send the message
-            ws.send(payload);
-            
-            // 3. Display the message in our own chat window as "sent"
-            appendMessage(payload, true); 
-            
+        if (message.trim() !== "") {
+            ws.send(message);
             inputField.value = "";
         }
     }
 
-
-    // --- Join Modal Handler ---
-    joinButton.addEventListener("click", function() {
-        const userVal = usernameInput.value.trim();
-        const roomVal = roomnameInput.value.trim();
-        
-        if (userVal && roomVal) {
-            username = userVal;
-            roomname = roomVal;
-            
-            // Hide modal and show chat
-            joinModal.style.display = "none";
-            chatContainer.style.display = "flex";
-            
-            // Start the WebSocket connection
-            connect();
-            
-        } else {
-            alert("Please enter a valid username and room name.");
-        }
-    });
-
-    // Allow sending with "Enter" key on input field
+    // Allow sending with "Enter" key
     inputField.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             sendMessage();
         }
     });
 
-    // Also allow sending with "Enter" key on modal input fields
-    usernameInput.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            joinButton.click();
-        }
-    });
-    roomnameInput.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            joinButton.click();
-        }
-    });
+    connect();
 </script>
 
 </body>

@@ -18,3 +18,17 @@ type RoomMember struct {
 	UserId uint   `json:"UserID" gorm:"primaryKey"`
 	Role   string `json:"Role" gorm:"default:'member'"`
 }
+
+type Message struct {
+    ID        uint      `json:"id" gorm:"primaryKey"` // Needed for DB
+    Content   string    `json:"content"`
+    
+    // Foreign Keys
+    RoomID    uint      `json:"room_id"` 
+    UserID    uint      `json:"user_id"` 
+    
+    // Optional: Preload user data (useful for showing sender names in history)
+    User      User      `json:"user" gorm:"foreignKey:UserID"`
+    
+    CreatedAt time.Time `json:"created_at"`
+}

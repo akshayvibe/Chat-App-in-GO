@@ -11,9 +11,8 @@ import (
 	"time"
 
 	// "log/slog"
-
-	"github.com/akshayjha21/Chat-App-in-GO/internal/chat"
-	"github.com/akshayjha21/Chat-App-in-GO/internal/config"
+	"github.com/akshayjha21/Chat-App-in-GO/Backend/internal/chat"
+	"github.com/akshayjha21/Chat-App-in-GO/Backend/internal/config"
 )
 
 func main() {
@@ -29,6 +28,7 @@ func main() {
 	// 3. Route Handler Update karenge
 	// Note: Hum seedha chat.ServeWs nahi de sakte kyunki usse 'hub' chahiye.
 	// Isliye hum ek "Closure" (anonymous function) use karenge.
+
 	router.HandleFunc("/ws",
 		func(w http.ResponseWriter, r *http.Request) {
 			chat.ServeWs(hub, w, r)
@@ -50,7 +50,7 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-done
 	log.Println("Server stopping.....")
-	// 3. Graceful Shutdown (Give active connections 5 seconds to finish)
+	//  Graceful Shutdown (Give active connections 5 seconds to finish)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 	defer cancel()
