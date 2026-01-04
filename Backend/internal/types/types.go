@@ -5,7 +5,7 @@ import "time"
 type User struct {
 	ID        uint      `json:"ID" gorm:"primaryKey"`
 	Username  string    `json:"Username" gorm:"unique;not null" valiDate:"required"`
-	Password  string    `json:"-" gorm:"not null"`
+	Password  string    `json:"Password" gorm:"not null"`
 	CreatedAt time.Time `json:"created_at"`
 }
 type Room struct {

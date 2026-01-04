@@ -1,6 +1,9 @@
 package user
 
 import (
+	"fmt"
+	// "log/slog"
+
 	"github.com/akshayjha21/Chat-App-in-GO/Backend/internal/storage/postgres"
 	"github.com/akshayjha21/Chat-App-in-GO/Backend/internal/types"
 	"github.com/gofiber/fiber/v2"
@@ -26,6 +29,7 @@ func (h *Handler) Registerhandler(c *fiber.Ctx) error {
 			Message: "Invalid request body",
 		})
 	}
+	// fmt.Println(user)
 
 	// Make sure these field names match your types.User struct!
 	if user.Username == "" || user.Password == "" {
