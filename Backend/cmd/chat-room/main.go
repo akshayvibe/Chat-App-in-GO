@@ -40,8 +40,9 @@ func main() {
 	// Isliye hum ek "Closure" (anonymous function) use karenge.
 
 	app.Post("/register",userHandler.Registerhandler)
-	app.Post("/ogin",userHandler.LoginHandler)
+	app.Post("/login",userHandler.LoginHandler)
 	app.Post("/createRoom",chatHandler.CreateChatRoom)
+	app.Post("/joinRoom",chatHandler.JoinRoom)
 
 	go func() {
 		log.Printf("Server starting on %s", cfg.Addr)

@@ -3,33 +3,31 @@ package types
 import "time"
 
 type User struct {
-	ID        uint      `json:"ID" gorm:"primaryKey"`
-	Username  string    `json:"Username" gorm:"unique;not null" valiDate:"required"`
-	Password  string    `json:"Password" gorm:"not null"`
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	Username  string    `json:"username" gorm:"unique;not null" valiDate:"required"`
+	Password  string    `json:"password" gorm:"not null"`
 	CreatedAt time.Time `json:"created_at"`
+	Rooms     []Room    `json:"rooms,omitempty" gorm:"many2many:room_members;"`
 }
 type Room struct {
-	ID        uint   `json:"ID"`
-	Name      string `json:"Name" gorm:"unique;not null"`
-	RoomCode  string `json:"RoomCode" gorm:"unique;not null"`
-	Isprivate bool   `json:"Is_private" gorm:"default:false"`
+	ID        uint   `json:"id"`
+	Name      string `json:"name" gorm:"unique;not null"`
+	RoomCode  string `json:"roomcode" gorm:"unique;not null"`
+	Isprivate bool   `json:"is_private" gorm:"default:false"`
+	//many users can be in many room
+	Members []User `json:"members" gorm:"many2many:room_members;"`
 }
 type RoomMember struct {
-	RoomID uint   `json:"RoomID" gorm:"primaryKey"`
-	UserID uint   `json:"UserID" gorm:"primaryKey"`
-	Role   string `json:"Role" gorm:"default:'member'"`
+	RoomID uint   `json:"roomid" gorm:"primaryKey"`
+	UserID uint   `json:"userid" gorm:"primaryKey"`
+	Role   string `json:"role" gorm:"default:'member'"`
 }
 
 type Message struct {
-	ID      uint   `json:"ID" gorm:"primaryKey"` // Needed for DB
-	Content string `json:"content" gorm:"type:text;not null"`
-
-	// Foreign Keys
-	RoomID uint `json:"room_ID" gorm:"index"` //indexing helps in db search
-	UserID uint `json:"user_ID" gorm:"index"`
-
-	// Optional: Preload user data (useful for showing sender names in history)
-	User User `json:"user" gorm:"foreignKey:UserID"`
-
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	Content   string    `json:"content" gorm:"type:text;not null"`
+	RoomID    uint      `json:"room_id" gorm:"index"`
+	UserID    uint      `json:"user_id" gorm:"index"`
+	User      User      `json:"user" gorm:"foreignKey:UserID"`
 	CreatedAt time.Time `json:"created_at"`
 }

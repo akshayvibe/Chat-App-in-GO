@@ -52,3 +52,22 @@ func(p *Postgres)RegisterRoom(chatRoom *types.Room)(*types.Room,error){
 	}
 	return chatRoom, nil
 }
+func (p *Postgres) GetRoom(code string) (*types.Room, error) {
+    var chatRoom types.Room
+    // Specify the column: "room_code = ?"
+    if err := p.Db.Where("room_code = ?", code).First(&chatRoom).Error; err != nil {
+        return nil, err
+    }
+    return &chatRoom, nil
+}
+func (p *Postgres)CheckExistingMembers(userid uint,roomid uint)(*types.RoomMember,error){
+	var existingMember types.RoomMember
+    err := p.Db.Where("room_id = ? AND user_id = ?", roomid, userid).First(&existingMember).Error
+    
+    if err == nil {
+        // No error means a record was found
+        return nil,err
+    }
+	return &existingMember,nil
+}
+
