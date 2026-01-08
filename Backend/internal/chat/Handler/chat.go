@@ -20,7 +20,7 @@ type ChatRoomResponse struct {
 
 func (ch *Chathandler) CreateChatRoom(c *fiber.Ctx) error {
 	chatRoom := &types.Room{}
-	if err := c.BodyParser(chatRoom); err != nil {
+	if err := c.BodyParser(&chatRoom); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(Response{
 			Status:  false,
 			Message: "Invalid Request Body",
@@ -38,7 +38,6 @@ func (ch *Chathandler) CreateChatRoom(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusCreated).JSON(res)
 }
-
 func registerRoom(db *postgres.Postgres, chatRoom *types.Room) *Response {
 	Code := String()
 	chatRoom.RoomCode = Code
@@ -62,12 +61,14 @@ func (ch *Chathandler) JoinRoom(c *fiber.Ctx) error {
 		UserID uint   `json:"user_id"`
 	}
 	var req Request
-
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"message": "Invalid body"})
 	}
 	res := joinRoom(ch.DB, req.Code, req.UserID)
-	return c.Status(201).JSON(res)
+	if !res.Status {
+		return c.Status(fiber.StatusInternalServerError).JSON(res)
+	}
+	return c.Status(fiber.StatusCreated).JSON(res)
 }
 func joinRoom(db *postgres.Postgres, code string, userID uint) *Response {
 	room, err := db.GetRoom(code)
@@ -80,14 +81,45 @@ func joinRoom(db *postgres.Postgres, code string, userID uint) *Response {
 		Role:   "member",
 	}
 	existing, _ := db.CheckExistingMembers(userID, room.ID)
-	if existing != nil {
+	if existing != nil && existing.UserID != 0 {
+		// This ensures we only stop if a real record was found
 		return &Response{Status: false, Message: "User already exists in the room"}
 	}
+
+	// NOW this code will finally run!
 	if err := db.Db.Create(&member).Error; err != nil {
 		return &Response{Status: false, Message: "Could not join room"}
 	}
+	return &Response{Status: true, Message: "Joined successfully", Data: member.RoomID}
+}
+func (ch *Chathandler) GetMyRoom(c *fiber.Ctx) error {
+	var user types.User
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Response{
+			Status:  false,
+			Message: "Invalid Request Body",
+		})
+	}
+	res := getRoomsInternal(ch.DB, user.ID)
+	if !res.Status {
+		return c.Status(fiber.StatusInternalServerError).JSON(res)
+	}
+	return c.Status(fiber.StatusCreated).JSON(res)
+}
+func getRoomsInternal(db *postgres.Postgres, userID uint) *Response {
+	rooms, err := db.GetUserRooms(userID)
+	if err != nil {
+		return &Response{
+			Status:  false,
+			Message: "Could not retrieve rooms",
+		}
+	}
 
-	return &Response{Status: true, Message: "Joined successfully"}
+	return &Response{
+		Status:  true,
+		Message: "Rooms retrieved successfully",
+		Data:    rooms,
+	}
 }
 
 // CREATING RANDOM STRING CODE

@@ -23,7 +23,7 @@ type UserResponse struct {
 func (h *UserHandler) Registerhandler(c *fiber.Ctx) error {
 	user := new(types.User)
 
-	if err := c.BodyParser(user); err != nil {
+	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(Response{
 			Status:  false,
 			Message: "Invalid request body",
@@ -49,7 +49,7 @@ func (h *UserHandler) Registerhandler(c *fiber.Ctx) error {
 }
 func (h *UserHandler) LoginHandler(c *fiber.Ctx) error {
 	user := &types.User{}
-	if err := c.BodyParser(user); err != nil {
+	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(Response{
 			Status:  false,
 			Message: "Invalid request body",

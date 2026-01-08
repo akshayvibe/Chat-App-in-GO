@@ -43,6 +43,7 @@ func main() {
 	app.Post("/login",userHandler.LoginHandler)
 	app.Post("/createRoom",chatHandler.CreateChatRoom)
 	app.Post("/joinRoom",chatHandler.JoinRoom)
+	app.Post("/getMyRoom",chatHandler.GetMyRoom)
 
 	go func() {
 		log.Printf("Server starting on %s", cfg.Addr)

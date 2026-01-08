@@ -60,14 +60,20 @@ func (p *Postgres) GetRoom(code string) (*types.Room, error) {
     }
     return &chatRoom, nil
 }
-func (p *Postgres)CheckExistingMembers(userid uint,roomid uint)(*types.RoomMember,error){
-	var existingMember types.RoomMember
+func (p *Postgres) GetUserRooms(userID uint) ([]types.Room, error) {
+    var rooms []types.Room
+    err := p.Db.Model(&types.User{ID: userID}).Association("Rooms").Find(&rooms)
+    return rooms, err
+}
+func (p *Postgres) CheckExistingMembers(userid uint, roomid uint) (*types.RoomMember, error) {
+    var existingMember types.RoomMember
     err := p.Db.Where("room_id = ? AND user_id = ?", roomid, userid).First(&existingMember).Error
     
-    if err == nil {
-        // No error means a record was found
-        return nil,err
+    if err != nil {
+        // If it's not found, this is GOOD for joining. Return nil.
+        return nil, err 
     }
-	return &existingMember,nil
-}
 
+    // If we get here, the user actually exists.
+    return &existingMember, nil
+}
