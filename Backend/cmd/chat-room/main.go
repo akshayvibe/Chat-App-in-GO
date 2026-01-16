@@ -30,14 +30,11 @@ func main() {
 	chatHandler := &handler.Chathandler{DB: db}
 	//1. hub ko initialize krenge
 	hub := chat.NewHub(db)
-	// Get the generic sql.DB object from GORM to close it
 	//2. hub ko background me execute krenge
 	go hub.Run()
 	
 	app:=fiber.New();
-	// 3. Route Handler Update karenge
-	// Note: Hum seedha chat.ServeWs nahi de sakte kyunki usse 'hub' chahiye.
-	// Isliye hum ek "Closure" (anonymous function) use karenge.
+
 
 	app.Post("/register",userHandler.Registerhandler)
 	app.Post("/login",userHandler.LoginHandler)

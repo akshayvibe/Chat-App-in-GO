@@ -86,7 +86,6 @@ func joinRoom(db *postgres.Postgres, code string, userID uint) *Response {
 		return &Response{Status: false, Message: "User already exists in the room"}
 	}
 
-	// NOW this code will finally run!
 	if err := db.Db.Create(&member).Error; err != nil {
 		return &Response{Status: false, Message: "Could not join room"}
 	}
