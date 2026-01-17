@@ -74,3 +74,4 @@ func getPrivateMessage(db *postgres.Postgres, userA, userB uint) *Response {
         Data:    privateMessages,
     }
 }
+//ANCHOR - have to add paggination in the message api
