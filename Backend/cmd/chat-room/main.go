@@ -28,6 +28,7 @@ func main() {
 	// userHandler := &user.Handler{DB: db}
 	userHandler := &handler.UserHandler{DB: db}
 	chatHandler := &handler.Chathandler{DB: db}
+	MessageHandler := &handler.MessageHandler{DB: db}
 	//1. hub ko initialize krenge
 	hub := chat.NewHub(db)
 	//2. hub ko background me execute krenge
@@ -41,7 +42,7 @@ func main() {
 	app.Post("/createRoom",chatHandler.CreateChatRoom)
 	app.Post("/joinRoom",chatHandler.JoinRoom)
 	app.Post("/getMyRoom",chatHandler.GetMyRoom)
-
+	app.Post("/getMessage/:roomId",MessageHandler.GetMessages)
 	go func() {
 		log.Printf("Server starting on %s", cfg.Addr)
 		if err := app.Listen(cfg.Addr); err != nil && err != http.ErrServerClosed {

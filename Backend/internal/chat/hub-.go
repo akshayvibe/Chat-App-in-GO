@@ -2,7 +2,7 @@ package chat
 
 import (
 	"log"
-
+	"fmt"
 	"github.com/akshayjha21/Chat-App-in-GO/Backend/internal/storage/postgres"
 )
 
@@ -38,6 +38,7 @@ func (h *Hub) Run() {
 			}
 			log.Println("disconnected from", client.Conn.RemoteAddr())
 		case message := <-h.Broadcast:
+			fmt.Println("new message", message)
 			for client := range h.Clients {
 				select {
 				case client.Send <- message:
