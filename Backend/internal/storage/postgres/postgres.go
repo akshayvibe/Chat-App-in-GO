@@ -90,3 +90,24 @@ func (p *Postgres)GetRoomMessages(roomId uint)([]types.Message,error){
 
     return messages, nil
 }
+
+func (p *Postgres) GetPrivateMessages(userA, userB uint) ([]types.Message, error) {
+    var messages []types.Message
+
+    // We fetch messages where:
+    // (A sent to B) OR (B sent to A)
+    // AND room_id is null (to ensure it's not a group message)
+    err := p.Db.Preload("FromUser").
+        Where(
+            "(from_id = ? AND to_id = ? AND room_id IS NULL) OR (from_id = ? AND to_id = ? AND room_id IS NULL)",
+            userA, userB, userB, userA,
+        ).
+        Order("created_at asc").
+        Find(&messages).Error
+
+    if err != nil {
+        return nil, err
+    }
+
+    return messages, nil
+}
